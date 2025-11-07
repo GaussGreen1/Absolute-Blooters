@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Goal struct {
@@ -51,6 +53,7 @@ func GamesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Gaaaames")
+	logrus.Info("Gaaaames logrus")
 
 	firstGame := Game{
 		Teams: [2]string{"Arsenal", "Chelsea"},
