@@ -35,7 +35,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		requestID := uuid.New().String()
 		start := time.Now()
 
-		// copy request body safely
 		var requestBody bytes.Buffer
 		if r.Body != nil {
 			tee := io.TeeReader(r.Body, &requestBody)
