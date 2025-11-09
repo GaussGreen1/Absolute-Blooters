@@ -20,12 +20,10 @@ CREATE TABLE IF NOT EXISTS goals (
   away_score INT DEFAULT 0
 );
 
--- sample data
 INSERT INTO games (home_team, away_team, home_score, away_score) VALUES ('Arsenal', 'Chelsea', 1, 0) ON CONFLICT DO NOTHING;
 INSERT INTO games (home_team, away_team, home_score, away_score) VALUES ('Arsenal', 'Sunderland', 4, 2) ON CONFLICT DO NOTHING;
 
 -- link goals to games
--- find the game ids and insert corresponding goals
 DO $$ DECLARE
  g1 INT;
  g2 INT;

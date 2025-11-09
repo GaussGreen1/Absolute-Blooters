@@ -9,7 +9,6 @@ import (
 	"blooters/internal/models"
 )
 
-// GamesHandler retrieves games from the database and returns them as JSON.
 func GamesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Gaaaames")
 
