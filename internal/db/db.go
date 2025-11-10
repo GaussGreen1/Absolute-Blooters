@@ -29,7 +29,6 @@ func Init() error {
 		return err
 	}
 
-	// set some reasonable defaults
 	db.SetConnMaxLifetime(5 * time.Minute)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(2)
@@ -60,7 +59,6 @@ func getEnv(k, def string) string {
 	return def
 }
 
-// GetGames returns all games and their goals from the database.
 func GetGames() ([]models.Game, error) {
 	if DB == nil {
 		return nil, fmt.Errorf("database not initialized")
@@ -87,7 +85,6 @@ func GetGames() ([]models.Game, error) {
 		g.AwayScore = awayScore
 		g.Timestamp = ts
 
-		// load goals for this game
 		g.Goals, err = loadGoalsForGame(g.ID, g.HomeTeam, g.AwayTeam)
 		if err != nil {
 			return nil, err
@@ -129,4 +126,70 @@ func loadGoalsForGame(gameID int, homeTeam, awayTeam string) ([]models.Goal, err
 		return nil, err
 	}
 	return goals, nil
+}
+
+// StoreGoals stores goals from r/soccer into the database, creating games as needed
+func StoreGoals(goals []models.Goal) error {
+	if DB == nil {
+		return fmt.Errorf("database not initialized")
+	}
+
+	// Group goals by game (home_team, away_team)
+	gameMap := make(map[string]models.Game)
+	for _, goal := range goals {
+		key := goal.HomeTeam + " vs " + goal.AwayTeam
+		if game, exists := gameMap[key]; exists {
+			game.Goals = append(game.Goals, goal)
+			gameMap[key] = game
+		} else {
+			gameMap[key] = models.Game{
+				HomeTeam:  goal.HomeTeam,
+				AwayTeam:  goal.AwayTeam,
+				HomeScore: goal.HomeScore,
+				AwayScore: goal.AwayScore,
+				Goals:     []models.Goal{goal},
+				Timestamp: time.Now(),
+			}
+		}
+	}
+
+	// Store each game and its goals
+	for _, game := range gameMap {
+		// Check if game already exists
+		var existingGameID int
+		err := DB.QueryRow(
+			"SELECT id FROM games WHERE home_team=$1 AND away_team=$2",
+			game.HomeTeam, game.AwayTeam,
+		).Scan(&existingGameID)
+
+		var gameID int
+		if err == sql.ErrNoRows {
+			// Insert new game
+			err := DB.QueryRow(
+				"INSERT INTO games (home_team, away_team, home_score, away_score, timestamp) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+				game.HomeTeam, game.AwayTeam, game.HomeScore, game.AwayScore, game.Timestamp,
+			).Scan(&gameID)
+			if err != nil {
+				return fmt.Errorf("failed to insert game: %w", err)
+			}
+		} else if err != nil {
+			return fmt.Errorf("failed to query game: %w", err)
+		} else {
+			gameID = existingGameID
+		}
+
+		// Insert goals for this game
+		for _, goal := range game.Goals {
+			_, err := DB.Exec(
+				"INSERT INTO goals (game_id, description, goalscorer, minute, url, away, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+				gameID, goal.Description, goal.Goalscorer, goal.Minute, goal.Url, goal.Away, goal.HomeScore, goal.AwayScore,
+			)
+			if err != nil {
+				// Log but continue - might be duplicate
+				fmt.Printf("Warning: failed to insert goal: %v\n", err)
+			}
+		}
+	}
+
+	return nil
 }
