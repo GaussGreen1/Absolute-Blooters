@@ -1,7 +1,7 @@
 package reddit
 
 import (
-	"fmt"
+	"log"
 	"testing"
 )
 
@@ -17,7 +17,7 @@ func TestParseGoalFromTitle(t *testing.T) {
 	}{
 		{
 			title:    "Newcastle United 0-1 Arsenal - Dennis Bergkamp 11'",
-			url:      "https://streamain.com/test",
+			url:      "https://www.youtube.com/watch?v=IicmCu47pMo",
 			wantHome: "Newcastle United",
 			wantAway: "Arsenal",
 			wantHs:   0,
@@ -26,7 +26,7 @@ func TestParseGoalFromTitle(t *testing.T) {
 		},
 		{
 			title:    "Arsenal [1]-0 Leeds United - Thierry Henry 78'",
-			url:      "https://streamain.com/test2",
+			url:      "https://www.youtube.com/watch?v=_bNBN9XlTK0",
 			wantHome: "Arsenal",
 			wantAway: "Leeds United",
 			wantHs:   1,
@@ -62,8 +62,8 @@ func TestParseGoalFromTitle(t *testing.T) {
 
 func ExampleParseGoalFromTitle() {
 	title := "Arsenal [1]-0 Leeds United - Thierry Henry 78'"
-	goal, _ := ParseGoalFromTitle(title, "https://example.com")
-	fmt.Printf("Team: %s vs %s\n", goal.HomeTeam, goal.AwayTeam)
-	fmt.Printf("Score: %d-%d\n", goal.HomeScore, goal.AwayScore)
-	fmt.Printf("Goal: %s in minute %s\n", goal.Goalscorer, goal.Minute)
+	goal, _ := ParseGoalFromTitle(title, "https://www.youtube.com/watch?v=_bNBN9XlTK0")
+	log.Printf("Team: %s vs %s\n", goal.HomeTeam, goal.AwayTeam)
+	log.Printf("Score: %d-%d\n", goal.HomeScore, goal.AwayScore)
+	log.Printf("Goal: %s in minute %s\n", goal.Goalscorer, goal.Minute)
 }

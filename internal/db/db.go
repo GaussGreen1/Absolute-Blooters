@@ -180,12 +180,15 @@ func StoreGoals(goals []models.Goal) error {
 
 		// Insert goals for this game
 		for _, goal := range game.Goals {
+			// Try to insert, skip silently if duplicate
 			_, err := DB.Exec(
-				"INSERT INTO goals (game_id, description, goalscorer, minute, url, away, home_score, away_score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+				`INSERT INTO goals 
+				 (game_id, description, goalscorer, minute, url, away, home_score, away_score)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+				 ON CONFLICT (url) DO NOTHING`,
 				gameID, goal.Description, goal.Goalscorer, goal.Minute, goal.Url, goal.Away, goal.HomeScore, goal.AwayScore,
 			)
 			if err != nil {
-				// Log but continue - might be duplicate
 				fmt.Printf("Warning: failed to insert goal: %v\n", err)
 			}
 		}

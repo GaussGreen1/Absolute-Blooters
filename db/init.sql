@@ -18,3 +18,5 @@ CREATE TABLE IF NOT EXISTS goals (
   home_score INT DEFAULT 0,
   away_score INT DEFAULT 0
 );
+
+ALTER TABLE goals ADD CONSTRAINT unique_goal_url UNIQUE (url);

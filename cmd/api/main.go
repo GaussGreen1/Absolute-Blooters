@@ -2,8 +2,10 @@ package main
 
 import (
 	"blooters/internal/db"
+	"blooters/internal/reddit"
 	"blooters/internal/server"
 	"log"
+	"time"
 )
 
 func main() {
@@ -18,7 +20,31 @@ func main() {
 
 	srv := server.NewServer()
 
-	if err := srv.Start(":8080"); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	go func() {
+		if err := srv.Start(":8080"); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	// Periodically (10s) fetch goals from Reddit and store in database
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		for range ticker.C {
+			log.Println("GOALS FETCHED HERE (ticker triggered)")
+			goals, err := reddit.FetchGoals()
+			if err != nil {
+				log.Printf("Error fetching goals: %s\n", err)
+				continue
+			}
+
+			if err := db.StoreGoals(goals); err != nil {
+				log.Printf("Error storing goals: %s\n", err)
+			} else {
+				log.Printf("StoreGoals end")
+			}
+		}
+	}()
+
+	// Keep the program running
+	select {}
 }
