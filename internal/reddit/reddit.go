@@ -21,10 +21,10 @@ type RedditResponse struct {
 		Children []struct {
 			Kind string `json:"kind"`
 			Data struct {
-				Title   string  `json:"title"`
-				URL     string  `json:"url"`
-				Created float64 `json:"created_utc"`
-				Ups     int     `json:"ups"`
+				Title     string  `json:"title"`
+				URL       string  `json:"url"`
+				Created   float64 `json:"created_utc"`
+				FlairText string  `json:"link_flair_text"`
 			} `json:"data"`
 		} `json:"children"`
 	} `json:"data"`
@@ -66,7 +66,7 @@ func FetchGoals() ([]models.Goal, error) {
 
 	var goals []models.Goal
 	for _, child := range redditResp.Data.Children {
-		if child.Kind != "t3" {
+		if child.Kind != "t3" || child.Data.FlairText != "Media" {
 			continue
 		}
 
