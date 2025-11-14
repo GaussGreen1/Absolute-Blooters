@@ -7,23 +7,10 @@ import (
 
 	"blooters/internal/db"
 	"blooters/internal/models"
-	"blooters/internal/reddit"
 )
 
 func GamesHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Fetching games...")
-
-	// Fetch goals from r/soccer
-	redditGoals, err := reddit.FetchGoals()
-	if err != nil {
-		log.Printf("Warning: failed to fetch from Reddit: %v\n", err)
-		// Fall back to database if Reddit fetch fails
-	} else if len(redditGoals) > 0 {
-		// Store fetched goals in database
-		if err := db.StoreGoals(redditGoals); err != nil {
-			log.Printf("Warning: failed to store goals: %v\n", err)
-		}
-	}
 
 	games, err := db.GetGames()
 	if err != nil {
