@@ -33,6 +33,24 @@ func TestParseGoalFromTitle(t *testing.T) {
 			wantAs:   0,
 			wantGoal: "Thierry Henry",
 		},
+		{
+			title:    "Cheltenham 0-[2] Notts County - Gabriel 27'",
+			url:      "https://www.youtube.com/watch?v=example",
+			wantHome: "Cheltenham",
+			wantAway: "Notts County",
+			wantHs:   0,
+			wantAs:   2,
+			wantGoal: "Gabriel",
+		},
+		{
+			title:    "Cheltenham 0-[2] Notts County - Tyrese Hall 27'",
+			url:      "https://www.youtube.com/watch?v=example",
+			wantHome: "Cheltenham",
+			wantAway: "Notts County",
+			wantHs:   0,
+			wantAs:   2,
+			wantGoal: "Tyrese Hall",
+		},
 	}
 
 	for _, tt := range tests {

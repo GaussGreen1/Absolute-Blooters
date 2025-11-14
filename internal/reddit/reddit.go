@@ -144,13 +144,19 @@ func ParseGoalFromTitle(title, url string) (models.Goal, error) {
 		goal.Goalscorer = strings.Title(lower)
 		goal.Minute = min
 	} else {
-		// fallback
+		// fallback: last field is minute, everything before is the scorer name
 		fields := strings.Fields(scorerPart)
-		if len(fields) > 0 {
+		if len(fields) >= 2 {
+			// Last field should be the minute (possibly with ' or ′)
+			minute := fields[len(fields)-1]
+			minute = strings.Trim(minute, "′'")
+			goal.Minute = minute
+
+			// Everything else is the goalscorer name
+			goal.Goalscorer = strings.Join(fields[:len(fields)-1], " ")
+		} else if len(fields) == 1 {
+			// Only one field, assume it's the scorer
 			goal.Goalscorer = fields[0]
-		}
-		if len(fields) > 1 {
-			goal.Minute = fields[1]
 		}
 	}
 
