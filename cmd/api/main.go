@@ -5,6 +5,7 @@ import (
 	"blooters/internal/reddit"
 	"blooters/internal/server"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -42,6 +43,13 @@ func main() {
 			} else {
 				log.Printf("StoreGoals end")
 			}
+
+			// Call the Ping API to keep the server active:
+			resp, err := http.Get("http://localhost:8080/api/ping")
+			if err != nil {
+				log.Fatal(err)
+			}
+			resp.Body.Close() // close immediately
 		}
 	}()
 
