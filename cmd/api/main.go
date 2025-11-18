@@ -45,7 +45,7 @@ func main() {
 			}
 
 			// Call the Ping API to keep the server active:
-			resp, err := http.Get("http://localhost:8080/api/ping")
+			resp, err := http.Get("https://absolute-blooters.onrender.com/api/ping")
 			if err != nil {
 				log.Fatal(err)
 			}
