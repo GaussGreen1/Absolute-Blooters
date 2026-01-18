@@ -20,6 +20,8 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Pinging a new log here")
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
