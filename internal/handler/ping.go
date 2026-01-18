@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 )
 
 type PingResponse struct {
@@ -19,8 +20,10 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Pinging a new log here")
 
+	origin := os.Getenv("CORS_ORIGIN")
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	w.WriteHeader(http.StatusOK)
 

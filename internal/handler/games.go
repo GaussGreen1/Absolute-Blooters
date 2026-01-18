@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 
 	"blooters/internal/db"
 	"blooters/internal/models"
@@ -23,8 +24,10 @@ func GamesHandler(w http.ResponseWriter, r *http.Request) {
 		Status: http.StatusOK,
 	}
 
+	origin := os.Getenv("CORS_ORIGIN")
+
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
 
 	w.WriteHeader(http.StatusOK)
 
