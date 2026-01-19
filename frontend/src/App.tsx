@@ -86,7 +86,14 @@ function App() {
                     <div className="game-header">
                       <h3>{game.home_team} vs {game.away_team}</h3>
                       <p className="score">{game.home_score} - {game.away_score}</p>
-                      <p className="timestamp">{new Date(game.timestamp).toLocaleString()}</p>
+                      <p className="timestamp">{new Date(game.timestamp).toLocaleString('it-IT', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit', 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                      })}</p>
                     </div>
                     {game.goals.length > 0 && (
                       <div className="goals">
