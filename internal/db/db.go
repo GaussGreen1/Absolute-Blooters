@@ -64,7 +64,7 @@ func GetGames() ([]models.Game, error) {
 		return nil, fmt.Errorf("database not initialized")
 	}
 
-	rows, err := DB.Query("SELECT id, home_team, away_team, home_score, away_score, timestamp FROM games ORDER BY id")
+	rows, err := DB.Query("SELECT id, home_team, away_team, home_score, away_score, timestamp FROM games ORDER BY timestamp DESC")
 	if err != nil {
 		return nil, err
 	}
