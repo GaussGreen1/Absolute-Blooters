@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from "./config";
+import { useTheme } from './contexts/ThemeContext';
 import './App.css';
 
 interface Goal {
@@ -32,6 +33,7 @@ interface GamesResponse {
 }
 
 function App() {
+  const { theme, toggleTheme } = useTheme();
   const [gamesData, setGamesData] = useState<Game[] | null>(null);
   const [loadingGames, setLoadingGames] = useState<boolean>(true);
   const [gamesError, setGamesError] = useState<string | null>(null);
@@ -58,7 +60,16 @@ function App() {
   return (
     <div className="app-container">
       <div className="card">
-        <h1>Absolute Blooters</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1>Absolute Blooters</h1>
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+        </div>
 
         {/* Games Section */}
         <section className="section">
