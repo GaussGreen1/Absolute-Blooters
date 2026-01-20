@@ -5,11 +5,13 @@
 body {
   background-color: #ffffff;
   color: #333333;
+  padding: 20px;
 }
 
 .dark body {
   background-color: #1a1a1a;
   color: #e5e5e5;
+  padding: 20px;
 }
 
 .loading {
