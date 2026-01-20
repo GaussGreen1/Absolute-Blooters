@@ -192,6 +192,23 @@ func StoreGoals(goals []models.Goal) error {
 				fmt.Printf("Warning: failed to insert goal: %v\n", err)
 			}
 		}
+
+		//Update the score as the goals go in:
+		err = DB.QueryRow(
+			"SELECT COALESCE(MAX(home_score), 0), COALESCE(MAX(away_score), 0) FROM goals WHERE game_id = $1",
+			gameID,
+		).Scan(&game.HomeScore, &game.AwayScore)
+		if err != nil {
+			return fmt.Errorf("failed to update game score: %w", err)
+		}
+
+		_, err = DB.Exec(
+			"UPDATE games SET home_score = $1, away_score = $2 WHERE id = $3",
+			game.HomeScore, game.AwayScore, gameID,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to update game: %w", err)
+		}
 	}
 
 	return nil
