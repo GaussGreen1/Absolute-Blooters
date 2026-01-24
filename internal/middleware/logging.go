@@ -54,7 +54,7 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			"status":           rw.statusCode,
 			"latency_ms":       duration.Milliseconds(),
 			"request_preview":  truncate(requestBody.String(), 8000),
-			"response_preview": truncate(rw.body.String(), 8000),
+			"response_preview": truncate(rw.body.String(), 200),
 		}).Info("completed request")
 	})
 }
