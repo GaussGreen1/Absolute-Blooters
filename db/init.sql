@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS goals (
   goalscorer TEXT,
   minute TEXT,
   url TEXT,
+  reddit_url TEXT,
+  mirrors TEXT,
   away BOOLEAN DEFAULT false,
   home_score INT DEFAULT 0,
   away_score INT DEFAULT 0

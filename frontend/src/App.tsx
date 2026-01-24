@@ -12,6 +12,8 @@ interface Goal {
   goalscorer: string;
   minute: string;
   url: string;
+  reddit_url: string;
+  mirrors: string;
   home_score: number;
   away_score: number;
   away: boolean;
@@ -113,11 +115,18 @@ function App() {
                           {game.goals.map((goal) => (
                             <li key={goal.id}>
                               {goal.url ? (
-                                <a href={goal.url} target="_blank" rel="noopener noreferrer" className="goal-link">
-                                  <strong>{goal.goalscorer}</strong> ({goal.minute}') - {goal.home_score}-{goal.away_score}
-                                  {goal.away ? ` (${goal.away_team})` : ` (${goal.home_team})`}
-                                  <span className="watch-text"> ▶ Watch</span>
-                                </a>
+                                <div className="goal-links">
+                                  <a href={goal.url} target="_blank" rel="noopener noreferrer" className="goal-link">
+                                    <strong>{goal.goalscorer}</strong> ({goal.minute}') - {goal.home_score}-{goal.away_score}
+                                    {goal.away ? ` (${goal.away_team})` : ` (${goal.home_team})`}
+                                    <span className="watch-text"> ▶ Watch</span>
+                                  </a>
+                                  {goal.mirrors && (
+                                    <a href={goal.mirrors} target="_blank" rel="noopener noreferrer" className="mirror-link">
+                                      🔄 Mirrors
+                                    </a>
+                                  )}
+                                </div>
                               ) : (
                                 <span>
                                   <strong>{goal.goalscorer}</strong> ({goal.minute}') - {goal.home_score}-{goal.away_score}

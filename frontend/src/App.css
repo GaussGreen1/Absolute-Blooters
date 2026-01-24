@@ -167,6 +167,27 @@ body {
   text-decoration: underline;
 }
 
+.goal-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.mirror-link {
+  color: #27ae60;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.dark .mirror-link {
+  color: #2ecc71;
+}
+
+.mirror-link:hover {
+  text-decoration: underline;
+}
+
 .watch-text {
   color: #e74c3c;
   font-weight: bold;

@@ -23,11 +23,35 @@ type RedditResponse struct {
 			Data struct {
 				Title     string  `json:"title"`
 				URL       string  `json:"url"`
+				Permalink string  `json:"permalink"`
 				Created   float64 `json:"created_utc"`
 				FlairText string  `json:"link_flair_text"`
 			} `json:"data"`
 		} `json:"children"`
 	} `json:"data"`
+}
+
+type Comment struct {
+	Kind string `json:"kind"`
+	Data struct {
+		Author    string    `json:"author"`
+		Body      string    `json:"body"`
+		Permalink string    `json:"permalink"`
+		Replies   *Comments `json:"replies"`
+		ID        string    `json:"id"`
+	} `json:"data"`
+}
+
+type Comments struct {
+	Kind string `json:"kind"`
+	Data struct {
+		Children []Comment `json:"children"`
+	} `json:"data"`
+}
+
+type PostAndComments struct {
+	Post     interface{} `json:"-"` // We don't need the post
+	Comments Comments    `json:"1"`
 }
 
 // FetchGoals fetches goals from Reddit API and parses them
@@ -50,8 +74,7 @@ func FetchGoals() ([]models.Goal, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("reddit API returned status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("reddit API returned status %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -71,11 +94,23 @@ func FetchGoals() ([]models.Goal, error) {
 		}
 
 		// Parse the title to extract goal information
-		goal, err := ParseGoalFromTitle(child.Data.Title, child.Data.URL)
+		goal, err := ParseGoalFromTitle(child.Data.Title, child.Data.URL, child.Data.Permalink)
 		if err != nil {
 			// Skip posts that don't match goal format
 			continue
 		}
+
+		// Fetch mirrors link
+		mirrorsLink, err := getMirrorsLink(goal.RedditURL)
+		if err != nil {
+			// Log error but don't skip the goal
+			fmt.Printf("Warning: failed to get mirrors for %s: %v\n", goal.RedditURL, err)
+			mirrorsLink = ""
+		}
+		goal.Mirrors = mirrorsLink
+
+		// Sleep to avoid rate limiting
+		time.Sleep(200 * time.Millisecond)
 
 		goals = append(goals, goal)
 	}
@@ -83,9 +118,10 @@ func FetchGoals() ([]models.Goal, error) {
 	return goals, nil
 }
 
-func ParseGoalFromTitle(title, url string) (models.Goal, error) {
+func ParseGoalFromTitle(title, url, permalink string) (models.Goal, error) {
 	goal := models.Goal{
 		Url:         url,
+		RedditURL:   "https://www.reddit.com" + permalink,
 		Description: title,
 	}
 
@@ -164,4 +200,87 @@ func ParseGoalFromTitle(title, url string) (models.Goal, error) {
 	goal.Away = goal.AwayScore > homeScore
 
 	return goal, nil
+}
+
+func getMirrorsLink(postURL string) (string, error) {
+	if !strings.HasSuffix(postURL, "/") {
+		postURL += "/"
+	}
+	commentsURL := postURL + ".json"
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	req, err := http.NewRequest("GET", commentsURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("User-Agent", "blooters/1.0 (goal scraper)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch comments: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("comments API returned status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read comments body: %w", err)
+	}
+
+	var data []interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		return "", fmt.Errorf("failed to parse comments JSON: %w", err)
+	}
+
+	if len(data) < 2 {
+		return "", fmt.Errorf("unexpected JSON structure")
+	}
+
+	commentsData, ok := data[1].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("comments data not found")
+	}
+
+	children, ok := commentsData["data"].(map[string]interface{})["children"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("comments children not found")
+	}
+
+	for _, child := range children {
+		comment, ok := child.(map[string]interface{})
+		if !ok || comment["kind"].(string) != "t1" {
+			continue
+		}
+
+		commentData, ok := comment["data"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		author, ok := commentData["author"].(string)
+		if !ok || author != "AutoModerator" {
+			continue
+		}
+
+		body, ok := commentData["body"].(string)
+		if !ok || !strings.Contains(body, "Mirrors / Alternative Angles") {
+			continue
+		}
+
+		permalink, ok := commentData["permalink"].(string)
+		if !ok {
+			continue
+		}
+
+		return "https://www.reddit.com" + permalink, nil
+	}
+
+	return "", fmt.Errorf("mirrors comment not found")
 }

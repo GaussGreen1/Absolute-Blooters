@@ -101,7 +101,7 @@ func GetGames() ([]models.Game, error) {
 }
 
 func loadGoalsForGame(gameID int, homeTeam, awayTeam string) ([]models.Goal, error) {
-	q := `SELECT id, description, goalscorer, minute, url, away, home_score, away_score FROM goals WHERE game_id=$1 ORDER BY id`
+	q := `SELECT id, description, goalscorer, minute, url, reddit_url, mirrors, away, home_score, away_score FROM goals WHERE game_id=$1 ORDER BY id`
 	rows, err := DB.Query(q, gameID)
 	if err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func loadGoalsForGame(gameID int, homeTeam, awayTeam string) ([]models.Goal, err
 	for rows.Next() {
 		var gl models.Goal
 		var hs, as int
-		if err := rows.Scan(&gl.ID, &gl.Description, &gl.Goalscorer, &gl.Minute, &gl.Url, &gl.Away, &hs, &as); err != nil {
+		if err := rows.Scan(&gl.ID, &gl.Description, &gl.Goalscorer, &gl.Minute, &gl.Url, &gl.RedditURL, &gl.Mirrors, &gl.Away, &hs, &as); err != nil {
 			return nil, err
 		}
 		gl.GameID = gameID
@@ -183,10 +183,11 @@ func StoreGoals(goals []models.Goal) error {
 			// Try to insert, skip silently if duplicate
 			_, err := DB.Exec(
 				`INSERT INTO goals 
-				 (game_id, description, goalscorer, minute, url, away, home_score, away_score)
-				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-				 ON CONFLICT (url) DO NOTHING`,
-				gameID, goal.Description, goal.Goalscorer, goal.Minute, goal.Url, goal.Away, goal.HomeScore, goal.AwayScore,
+				 (game_id, description, goalscorer, minute, url, reddit_url, mirrors, away, home_score, away_score)
+				 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+				 ON CONFLICT (url) DO UPDATE SET
+				 mirrors = CASE WHEN goals.mirrors = '' THEN EXCLUDED.mirrors ELSE goals.mirrors END`,
+				gameID, goal.Description, goal.Goalscorer, goal.Minute, goal.Url, goal.RedditURL, goal.Mirrors, goal.Away, goal.HomeScore, goal.AwayScore,
 			)
 			if err != nil {
 				fmt.Printf("Warning: failed to insert goal: %v\n", err)

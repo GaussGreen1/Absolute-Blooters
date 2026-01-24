@@ -11,6 +11,8 @@ type Goal struct {
 	Goalscorer  string `json:"goalscorer"`
 	Minute      string `json:"minute"`
 	Url         string `json:"url"`
+	RedditURL   string `json:"reddit_url"`
+	Mirrors     string `json:"mirrors"`
 	HomeScore   int    `json:"home_score"`
 	AwayScore   int    `json:"away_score"`
 	Away        bool   `json:"away"` // true if goalscorer plays for away team
