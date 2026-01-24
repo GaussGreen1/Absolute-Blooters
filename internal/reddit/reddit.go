@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"blooters/internal/db"
 	"blooters/internal/models"
 )
 
@@ -99,18 +100,6 @@ func FetchGoals() ([]models.Goal, error) {
 			// Skip posts that don't match goal format
 			continue
 		}
-
-		// Fetch mirrors link
-		mirrorsLink, err := getMirrorsLink(goal.RedditURL)
-		if err != nil {
-			// Log error but don't skip the goal
-			fmt.Printf("Warning: failed to get mirrors for %s: %v\n", goal.RedditURL, err)
-			mirrorsLink = ""
-		}
-		goal.Mirrors = mirrorsLink
-
-		// Sleep to avoid rate limiting
-		time.Sleep(200 * time.Millisecond)
 
 		goals = append(goals, goal)
 	}
@@ -283,4 +272,60 @@ func getMirrorsLink(postURL string) (string, error) {
 	}
 
 	return "", fmt.Errorf("mirrors comment not found")
+}
+
+func PopulateMirrors() error {
+	if db.DB == nil {
+		return fmt.Errorf("database not initialized")
+	}
+
+	// Get up to 5 goals without mirrors
+	rows, err := db.DB.Query("SELECT id, reddit_url FROM goals WHERE mirrors = '' AND reddit_url != '' LIMIT 5")
+	if err != nil {
+		return fmt.Errorf("failed to query goals without mirrors: %w", err)
+	}
+	defer rows.Close()
+
+	var goalsToUpdate []struct {
+		ID        int
+		RedditURL string
+	}
+
+	for rows.Next() {
+		var id int
+		var redditURL string
+		if err := rows.Scan(&id, &redditURL); err != nil {
+			return fmt.Errorf("failed to scan goal: %w", err)
+		}
+		goalsToUpdate = append(goalsToUpdate, struct {
+			ID        int
+			RedditURL string
+		}{ID: id, RedditURL: redditURL})
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("rows error: %w", err)
+	}
+
+	// For each, fetch mirrors
+	for _, g := range goalsToUpdate {
+		mirrorsLink, err := getMirrorsLink(g.RedditURL)
+		if err != nil {
+			fmt.Printf("Warning: failed to get mirrors for goal %d: %v\n", g.ID, err)
+			continue
+		}
+
+		// Update DB
+		_, err = db.DB.Exec("UPDATE goals SET mirrors = $1 WHERE id = $2", mirrorsLink, g.ID)
+		if err != nil {
+			fmt.Printf("Warning: failed to update mirrors for goal %d: %v\n", g.ID, err)
+		} else {
+			fmt.Printf("Updated mirrors for goal %d\n", g.ID)
+		}
+
+		// Sleep to avoid rate limiting
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
 }

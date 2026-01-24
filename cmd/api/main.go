@@ -44,6 +44,11 @@ func main() {
 				log.Printf("StoreGoals end")
 			}
 
+			// Populate mirrors for goals that don't have them
+			if err := reddit.PopulateMirrors(); err != nil {
+				log.Printf("Error populating mirrors: %s\n", err)
+			}
+
 			// Call the Ping API to keep the server active:
 			resp, err := http.Get("https://absolute-blooters.onrender.com/api/ping")
 			if err != nil {
