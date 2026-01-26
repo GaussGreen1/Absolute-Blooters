@@ -214,3 +214,55 @@ func StoreGoals(goals []models.Goal) error {
 
 	return nil
 }
+
+func RemoveOldGoals() error {
+	if DB == nil {
+		return fmt.Errorf("database not initialized")
+	}
+
+	// Use advisory lock to prevent concurrent cleanup
+	var locked bool
+	err := DB.QueryRow("SELECT pg_try_advisory_lock($1)", int64(1001)).Scan(&locked)
+	if err != nil {
+		return fmt.Errorf("failed to acquire advisory lock: %w", err)
+	}
+	if !locked {
+		return fmt.Errorf("cleanup already in progress")
+	}
+	defer DB.Exec("SELECT pg_advisory_unlock($1)", int64(1001))
+
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	// Clean up games: keep only the 100 most recent
+	var gameCount int
+	err = tx.QueryRow("SELECT COUNT(*) FROM games").Scan(&gameCount)
+	if err != nil {
+		return fmt.Errorf("failed to count games: %w", err)
+	}
+	if gameCount > 100 {
+		toDelete := gameCount - 100
+		_, err = tx.Exec(`
+			DELETE FROM games
+			WHERE id IN (
+				SELECT id FROM games
+				ORDER BY timestamp ASC
+				LIMIT $1
+			)`, toDelete)
+		if err != nil {
+			return fmt.Errorf("failed to delete old games: %w", err)
+		}
+	}
+	// Goals are deleted automatically via CASCADE, no need to delete separately
+
+	return nil
+}

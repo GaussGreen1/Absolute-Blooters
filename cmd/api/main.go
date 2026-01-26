@@ -58,6 +58,19 @@ func main() {
 		}
 	}()
 
+	// Periodically (5h) remove old goals
+	tickerLimit := time.NewTicker(5 * time.Hour)
+	go func() {
+		for range tickerLimit.C {
+			if err := db.RemoveOldGoals(); err != nil {
+				log.Printf("Error removing old goals: %s\n", err)
+			} else {
+				log.Printf("RemoveOldGoals end")
+			}
+
+		}
+	}()
+
 	// Keep the program running
 	select {}
 }

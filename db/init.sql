@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS games (
   timestamp TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE INDEX IF NOT EXISTS idx_games_timestamp ON games (timestamp);
+
 CREATE TABLE IF NOT EXISTS goals (
   id SERIAL PRIMARY KEY,
   game_id INT REFERENCES games(id) ON DELETE CASCADE,
