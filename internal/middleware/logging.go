@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"blooters/internal/metrics"
 	"bytes"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,6 +58,10 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 			"request_preview":  truncate(requestBody.String(), 8000),
 			"response_preview": truncate(rw.body.String(), 200),
 		}).Info("completed request")
+
+		// Record metrics
+		metrics.HTTPRequestDuration.WithLabelValues(r.Method, r.URL.Path, strconv.Itoa(rw.statusCode)).Observe(duration.Seconds())
+		metrics.HTTPRequestCount.WithLabelValues(r.Method, r.URL.Path, strconv.Itoa(rw.statusCode)).Inc()
 	})
 }
 

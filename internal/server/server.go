@@ -5,6 +5,8 @@ import (
 	"blooters/internal/middleware"
 	"log"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Server struct {
@@ -16,6 +18,7 @@ func NewServer() *Server {
 
 	mux.HandleFunc("GET /api/ping", handler.PingHandler)
 	mux.HandleFunc("GET /api/games", handler.GamesHandler)
+	mux.Handle("/metrics", promhttp.Handler())
 
 	//Logging middleware:
 	handler := middleware.LoggingMiddleware(mux)

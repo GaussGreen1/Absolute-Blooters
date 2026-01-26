@@ -41,6 +41,7 @@ function App() {
   const [gamesError, setGamesError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('Fetching games...');
     fetch(`${API_BASE_URL}/api/games`)
       .then((response) => {
         if (!response.ok) {

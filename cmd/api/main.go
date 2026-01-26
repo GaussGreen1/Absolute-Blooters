@@ -2,6 +2,7 @@ package main
 
 import (
 	"blooters/internal/db"
+	"blooters/internal/metrics"
 	"blooters/internal/reddit"
 	"blooters/internal/server"
 	"log"
@@ -35,18 +36,25 @@ func main() {
 			goals, err := reddit.FetchGoals()
 			if err != nil {
 				log.Printf("Error fetching goals: %s\n", err)
+				metrics.GoalsFetchCount.WithLabelValues("error").Inc()
 				continue
 			}
+			metrics.GoalsFetchCount.WithLabelValues("success").Inc()
 
 			if err := db.StoreGoals(goals); err != nil {
 				log.Printf("Error storing goals: %s\n", err)
+				metrics.GoalsStoreCount.WithLabelValues("error").Inc()
 			} else {
 				log.Printf("StoreGoals end")
+				metrics.GoalsStoreCount.WithLabelValues("success").Inc()
 			}
 
 			// Populate mirrors for goals that don't have them
 			if err := reddit.PopulateMirrors(); err != nil {
 				log.Printf("Error populating mirrors: %s\n", err)
+				metrics.MirrorsPopulateCount.WithLabelValues("error").Inc()
+			} else {
+				metrics.MirrorsPopulateCount.WithLabelValues("success").Inc()
 			}
 
 			// Call the Ping API to keep the server active:
@@ -64,8 +72,10 @@ func main() {
 		for range tickerLimit.C {
 			if err := db.RemoveOldGoals(); err != nil {
 				log.Printf("Error removing old goals: %s\n", err)
+				metrics.RemoveOldGoalsCount.WithLabelValues("error").Inc()
 			} else {
 				log.Printf("RemoveOldGoals end")
+				metrics.RemoveOldGoalsCount.WithLabelValues("success").Inc()
 			}
 
 		}
