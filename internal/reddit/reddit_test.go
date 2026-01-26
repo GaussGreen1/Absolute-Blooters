@@ -1,7 +1,7 @@
 package reddit
 
 import (
-	"log"
+	"fmt"
 	"testing"
 )
 
@@ -54,7 +54,7 @@ func TestParseGoalFromTitle(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		goal, err := ParseGoalFromTitle(tt.title, tt.url)
+		goal, err := ParseGoalFromTitle(tt.title, tt.url, "/r/soccer/comments/example")
 		if err != nil {
 			t.Errorf("ParseGoalFromTitle(%q) error = %v", tt.title, err)
 			continue
@@ -80,8 +80,8 @@ func TestParseGoalFromTitle(t *testing.T) {
 
 func ExampleParseGoalFromTitle() {
 	title := "Arsenal [1]-0 Leeds United - Thierry Henry 78'"
-	goal, _ := ParseGoalFromTitle(title, "https://www.youtube.com/watch?v=_bNBN9XlTK0")
-	log.Printf("Team: %s vs %s\n", goal.HomeTeam, goal.AwayTeam)
-	log.Printf("Score: %d-%d\n", goal.HomeScore, goal.AwayScore)
-	log.Printf("Goal: %s in minute %s\n", goal.Goalscorer, goal.Minute)
+	goal, _ := ParseGoalFromTitle(title, "https://www.youtube.com/watch?v=_bNBN9XlTK0", "/r/soccer/comments/example")
+	fmt.Printf("Team: %s vs %s\n", goal.HomeTeam, goal.AwayTeam)
+	fmt.Printf("Score: %d-%d\n", goal.HomeScore, goal.AwayScore)
+	fmt.Printf("Goal: %s in minute %s\n", goal.Goalscorer, goal.Minute)
 }

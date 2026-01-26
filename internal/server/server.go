@@ -56,46 +56,43 @@ func (s *Server) Start(addr string) error {
 func pushMetrics(url, username, password string) {
 	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			mfs, err := prometheus.DefaultGatherer.Gather()
-			if err != nil {
-				log.Println("Error gathering metrics:", err)
-				continue
-			}
-			ts := toTimeSeries(mfs)
-			if len(ts) == 0 {
-				continue
-			}
-			req := &prompb.WriteRequest{
-				Timeseries: ts,
-			}
-			data, err := proto.Marshal(req)
-			if err != nil {
-				log.Println("Error marshaling:", err)
-				continue
-			}
-			compressed := snappy.Encode(nil, data)
-			httpClient := &http.Client{Timeout: 30 * time.Second}
-			reqHttp, err := http.NewRequest("POST", url, bytes.NewReader(compressed))
-			if err != nil {
-				log.Println("Error creating request:", err)
-				continue
-			}
-			reqHttp.SetBasicAuth(username, password)
-			reqHttp.Header.Set("Content-Type", "application/x-protobuf")
-			reqHttp.Header.Set("Content-Encoding", "snappy")
-			reqHttp.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
-			resp, err := httpClient.Do(reqHttp)
-			if err != nil {
-				log.Println("Error sending:", err)
-				continue
-			}
-			resp.Body.Close()
-			if resp.StatusCode != 200 {
-				log.Println("Error status:", resp.StatusCode)
-			}
+	for range ticker.C {
+		mfs, err := prometheus.DefaultGatherer.Gather()
+		if err != nil {
+			log.Println("Error gathering metrics:", err)
+			continue
+		}
+		ts := toTimeSeries(mfs)
+		if len(ts) == 0 {
+			continue
+		}
+		req := &prompb.WriteRequest{
+			Timeseries: ts,
+		}
+		data, err := proto.Marshal(req)
+		if err != nil {
+			log.Println("Error marshaling:", err)
+			continue
+		}
+		compressed := snappy.Encode(nil, data)
+		httpClient := &http.Client{Timeout: 30 * time.Second}
+		reqHttp, err := http.NewRequest("POST", url, bytes.NewReader(compressed))
+		if err != nil {
+			log.Println("Error creating request:", err)
+			continue
+		}
+		reqHttp.SetBasicAuth(username, password)
+		reqHttp.Header.Set("Content-Type", "application/x-protobuf")
+		reqHttp.Header.Set("Content-Encoding", "snappy")
+		reqHttp.Header.Set("X-Prometheus-Remote-Write-Version", "0.1.0")
+		resp, err := httpClient.Do(reqHttp)
+		if err != nil {
+			log.Println("Error sending:", err)
+			continue
+		}
+		resp.Body.Close()
+		if resp.StatusCode != 200 {
+			log.Println("Error status:", resp.StatusCode)
 		}
 	}
 }
