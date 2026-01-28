@@ -2,9 +2,20 @@
 
 https://absolute-blooters-fe.onrender.com/
 
-**Absolute Blooters** is a lightweight website for watching football goals as they happen.
+<a href="https://absolute-blooters-fe.onrender.com/" target="_blank">
+  <img
+    width="2556"
+    height="1223"
+    alt="Absolute Blooters screenshot"
+    src="https://github.com/user-attachments/assets/bc83545d-d26a-4216-bab3-5f3e9a1f77e5"
+  />
+</a>
+<br />
+<br />
 
-Goal links are automatically fetched from the r/soccer subreddit and posted in near real time. Goals are grouped by match with live scores, and mirror links are provided for broken videos or alternate angles.
+**Absolute Blooters** is a simple website that allows you to watch football goals as they happen.
+
+Video links are automatically fetched from the r/soccer subreddit and posted in near real time. Goals are grouped by match with live scores, and mirror links are provided for broken videos or alternate angles.
 
 Perfect for quickly catching up on goals without digging through match threads.
 
